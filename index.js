@@ -3,6 +3,7 @@ const app = express();
 const bodyParser = require("body-parser");
 const connection = require("./database/database");
 const Pergunta = require("./database/Pergunta");
+const Resposta = require("./database/Resposta")
 
 // Database
 connection.authenticate()
@@ -21,7 +22,15 @@ app.use(bodyParser.json());
 
 // Rotas
 app.get("/",(req, res) => {
-    res.render("index.ejs");
+    Pergunta.findAll({ raw: true, order: [
+        ['id','DESC'] // DESC DECRESCENTE, ASC CRESCENTE
+    ] }).then(perguntas => {
+        console.log(perguntas);
+        res.render("index.ejs", {
+            perguntas: perguntas
+        });
+    }); // SELECT * FROM PERGUNTAS
+    
 });
 
 app.get("/perguntar",(req, res) => {
@@ -39,6 +48,21 @@ app.post("/salvarpergunta",(req, res) => {
     });
     //console.log("teste " + titulo + descricao)
     //res.send("Formulario recebido! Titulo " + titulo + " - Descrição " + descricao)
+});
+
+app.get("/pergunta/:id",(req, res) => {
+    var id = req.params.id;
+    Pergunta.findOne({
+        where: {id: id}
+    }).then(pergunta => {
+        if(pergunta != undefined) {
+            res.render("pergunta",{
+                pergunta: pergunta
+            });
+        }else{
+            res.redirect("/");
+        }
+    })
 });
 
 app.listen(8080,() => {
